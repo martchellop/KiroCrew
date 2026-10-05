@@ -395,7 +395,7 @@ function ChatSidebar({
   } = useColumnMatches({ subagentStartedCounts, subagentApprovalCounts, workflowActiveSet, automationRunningSet })
 
   const {
-    slotFolders, foldersWithActiveSubtree, setRevealForcedVisible, isFolderHidden, filterHiddenSubtree,
+    slotFolders, foldersWithActiveSubtree, setRevealForcedVisible, isFolderHidden, filterHiddenSubtree, pinnedFolderSubtree, pinnedFolderAncestors,
   } = useFolderVisibility({ folders, localSlots, filterHiddenFolders })
 
   useStaleMoveWatcher({ foldersLoaded, localSlots, slotFolders, setStaleRecentlyMoved })
@@ -453,7 +453,7 @@ function ChatSidebar({
       models: { passes: modelFilterPasses, active: activeModelKeys.size > 0 },
       search: { text: slotFilter, folderMatches: folderNameMatchIds },
       status: { active: activeFilters, hidden: hiddenFilters, paused: filtersPaused, recentWindowMs },
-      folders: { hiddenSubtree: filterHiddenSubtree, active: folderFilterActive },
+      folders: { hiddenSubtree: filterHiddenSubtree, pinnedSubtree: pinnedFolderSubtree, active: folderFilterActive },
     },
     clears: { tags: clearTagFilter, models: clearModelFilter, search: clearSearch, status: clearAllFilters, folder: clearFolderHide, hides: clearHiddenFilters },
     crewGroups: shownCrewGroups,
@@ -558,7 +558,7 @@ function ChatSidebar({
   const {
     isFolderFilteredOut, revealedContainers, toggleReveal, hiddenByContainer, allHiddenFolders,
     hiddenFolderCount,
-  } = useFolderFilterReveal({ folderFilterActive, filterHiddenFolders, folders, isFolderHidden, folderCompare, boardLaneActive })
+  } = useFolderFilterReveal({ folderFilterActive, filterHiddenFolders, folders, isFolderHidden, folderCompare, boardLaneActive, filterHiddenSubtree, pinnedFolderSubtree, pinnedFolderAncestors })
   const {
     citedCreatorExists, conductorRows, conductorMatching, lineage, conductorExpanded, toggleConductorExpanded,
     expandConductorAncestors,
@@ -599,7 +599,7 @@ function ChatSidebar({
 
   const {
     folderFilterRows,
-  } = useFolderFilterRows({ folderTree: sidebarRows.folderTree, folders, folderCompare, filterHiddenFolders, filterHiddenSubtree })
+  } = useFolderFilterRows({ folderTree: sidebarRows.folderTree, folders, folderCompare, filterHiddenFolders, filterHiddenSubtree, pinnedFolderSubtree })
 
   const {
     createFolderMutation, deleteFolderMutation, updateFolderMutation, toggleCollapse,
@@ -822,7 +822,7 @@ function ChatSidebar({
     folderCompare, folderConductorPin, folderCreateError, folderDragWithheld, folderEditInputRef, folderCancelEscapeRef,
     folderFilterRows, folderNameMatchIds, folderReorderable, folderReorderHint, folderReorderHintRef,
     folderRowsDrawn, folders, foldersError, foldersFailed, folderSortMode, folderSortMut, folderSortRead,
-    foldersShelved, folderSubtrees, foldersWithActiveSubtree, handleSidebarDragCancel, handleSidebarDragEnd,
+    foldersShelved, folderSubtrees, foldersWithActiveSubtree, pinnedFolderSubtree, pinnedFolderAncestors, handleSidebarDragCancel, handleSidebarDragEnd,
     handleSidebarDragOver, handleSidebarDragStart, hasRemoteExecutedRow, heldDisplacedRef, heldLane,
     hiddenByContainer, hiddenFilters, hiddenFolderCount, hideEmptyFolderBody, history, historyDragging,
     historyFilter, historyHasMore, historyHeight, historyOpen, historyResize, historySearchResults,
