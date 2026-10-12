@@ -553,7 +553,7 @@ def _url_payload_command(n: int) -> str:
 #: the read floor (``_CREW_SECRET_LEAVES``), because an approved entry's ``env`` or
 #: ``headers`` can hold an API key and only the floor masks it from a foreign child.
 #:
-#: Set to the measured 32,802: the package measures 32,799, plus 3 for one
+#: Set to the measured 32,826: the package measures 32,799, plus 3 for one
 #: ``_CREW_SECRET_LEAVES`` entry in ``paths_lists``:
 #: the mediated-secret request directory (``secret-request-policy``), denied to the
 #: agent file tools as a whole. Data, not rule logic: the matcher is unchanged.
@@ -595,7 +595,11 @@ def _url_payload_command(n: int) -> str:
 #: Raised by 177, from 32,970, for the ``rm`` floor reading each nested-shell payload
 #: through the shared reader, and ``shell_commands.redirect_hidden_payloads``: a redirect
 #: before the ``-c`` operand hides no payload. Deny-only: no allow widened.
-_PACKAGE_LINE_BUDGET = 33_147
+#: Raised by 23, from 33,147, for ``exfil._exfil_blob_hit``: the base64-blob
+#: heuristic judged through one helper that skips a maximal match which is exactly
+#: a SHA-1 git object name (40 lowercase hex digits), so a commit permalink with
+#: the hash in its query renders. Data and one narrowing helper; no pattern moved.
+_PACKAGE_LINE_BUDGET = 33_170
 
 #: Ceiling on any ONE file in the package. This is what the bound is really for --
 #: a package total says nothing about a single file growing back into a second
