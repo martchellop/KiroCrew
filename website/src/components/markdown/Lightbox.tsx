@@ -4,6 +4,7 @@ import Clickable from '../Clickable'
 import { DOUBLE_TAP_MS, DOUBLE_TAP_SLOP, DOUBLE_TAP_ZOOM, usePinchZoom } from '../../hooks/usePinchZoom'
 import { copyImageToClipboard, imageBlobToPng } from '../../utils/clipboard'
 import { isEditableTarget } from '../../utils/editableTarget'
+import { isInertSurface } from '../../utils/inertSurface'
 import { downloadBlob } from '../../utils/download'
 import ErrorNotice from '../ErrorNotice'
 import {
@@ -572,6 +573,7 @@ export function Lightbox() {
   useEffect(() => {
     if (!isOpen || crewHidden) return
     const onKey = (e: KeyboardEvent) => {
+      if (isInertSurface(overlayRef.current)) return
       // While the actions menu is open it owns Escape (close the menu) and the
       // arrows (move between items). This capture-phase listener runs first, so
       // without standing down it would close the whole viewer on the Escape the
