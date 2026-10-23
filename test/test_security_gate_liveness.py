@@ -595,7 +595,14 @@ def _url_payload_command(n: int) -> str:
 #: Raised by 177, from 32,970, for the ``rm`` floor reading each nested-shell payload
 #: through the shared reader, and ``shell_commands.redirect_hidden_payloads``: a redirect
 #: before the ``-c`` operand hides no payload. Deny-only: no allow widened.
-_PACKAGE_LINE_BUDGET = 33_147
+#: Set to the true count, 33,180: the package is 33,146 lines without
+#: ``readonly_bash.command_names_git``, the no-approver hook surface's fail-closed
+#: git check, which adds 34: it folds a line continuation, removes the quotes and
+#: backslashes the shell removes, and refuses whenever ``git`` is left anywhere in
+#: the text or the shell writes a word's letters itself (a glob, an extglob, a brace
+#: list, an ANSI-C ``$'...'``). It parses no shell grammar, so it refuses more than it
+#: must rather than less.
+_PACKAGE_LINE_BUDGET = 33_180
 
 #: Ceiling on any ONE file in the package. This is what the bound is really for --
 #: a package total says nothing about a single file growing back into a second
