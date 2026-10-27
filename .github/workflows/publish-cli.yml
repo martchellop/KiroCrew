@@ -59,7 +59,11 @@ permissions:
 jobs:
   publish-cli:
     name: Publish CLI wheel (${{ inputs.channel }})
-    runs-on: ubuntu-latest
+    # `kirocrew-runners` larger-runner group, targeted by GROUP not label; see
+    # "Larger runners for the review lanes and CodeQL" in
+    # docs/ci/ci-and-reviews.md.
+    runs-on:
+      group: kirocrew-runners
     timeout-minutes: 30
     # REQUIRED for tag-triggered (release) runs: the signing role's OIDC trust
     # accepts exactly two subjects -- ref:refs/heads/main and environment:prod.
