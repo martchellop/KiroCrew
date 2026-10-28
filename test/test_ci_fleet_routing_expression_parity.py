@@ -155,12 +155,23 @@ _PERMANENT_EXCEPTIONS = {
     ("fork-pr-description.yml", "describe"),
     ("fork-workflow-guard.yml", "guard"),
     ("fork-workflow-guard.yml", "strip-stale-override"),
+    # The merge-path utility lanes, with `disposition-deferral-check` above
+    # already a member. Each is seconds of work whose wall clock is almost all
+    # queue wait, and each sits where a human is waiting to merge, so they moved
+    # to the larger-runner group for queue position. Membership here is what
+    # lets the pin below exist: a runner may only be pinned for a job this set
+    # names.
+    ("issue-gate.yml", "issue-gate"),
+    ("pr-size-override.yml", "record"),
+    ("sensitive-change-review-comment.yml", "rerun"),
+    ("merged-readiness-audit.yml", "audit"),
 }
 
 # A permanent exception stays OFF the CodeBuild fleet; it does not have to stay
 # on the shared standard runner. These lanes moved to the `kirocrew-runners`
-# larger-runner group, which is still a GitHub-hosted Ubuntu VM with the same
-# filesystem layout and no fleet credentials, so every isolation contract above
+# larger-runner group (with a hosted fork fallback where pinned below), still
+# GitHub-hosted Ubuntu VMs with the same filesystem layout and no fleet
+# credentials, so every isolation contract above
 # still holds. Pinned per job rather than waived: a lane that drifts to some
 # third runner must still fail this check.
 _HOSTED_EXCEPTION_RUNNERS: dict[tuple[str, str], object] = {
@@ -176,6 +187,24 @@ _HOSTED_EXCEPTION_RUNNERS: dict[tuple[str, str], object] = {
     ("fork-pr-description.yml", "describe"): {"group": "kirocrew-runners"},
     ("fork-workflow-guard.yml", "guard"): {"group": "kirocrew-runners"},
     ("fork-workflow-guard.yml", "strip-stale-override"): {"group": "kirocrew-runners"},
+    # A personal fork cannot reach the org group; preserve its hosted fallback.
+    ("issue-gate.yml", "issue-gate"): (
+        "${{ github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' "
+        "|| 'ubuntu-latest' }}"
+    ),
+    ("pr-size-override.yml", "record"): (
+        "${{ github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' "
+        "|| 'ubuntu-latest' }}"
+    ),
+    ("disposition-deferral-check.yml", "validate-deferral"): (
+        "${{ github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' "
+        "|| 'ubuntu-latest' }}"
+    ),
+    ("sensitive-change-review-comment.yml", "rerun"): (
+        "${{ github.repository == 'kirodotdev/KiroCrew' && 'kirocrew-linux-4-core' "
+        "|| 'ubuntu-latest' }}"
+    ),
+    ("merged-readiness-audit.yml", "audit"): {"group": "kirocrew-runners"},
 }
 _DEFAULT_HOSTED_EXCEPTION_RUNNER = "ubuntu-latest"
 
