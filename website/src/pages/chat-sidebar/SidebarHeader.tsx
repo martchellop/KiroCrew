@@ -19,7 +19,7 @@ import { offlineMenuRow, offlineProps } from '../../utils/offline'
 /** The header row. */
 export function renderSidebarHeader(shell: SidebarScope): React.ReactNode {
   const { cleanupOpen, collapsible, connected, createChatInFolder, createChatMutation, createEphemeralChatMutation,
-    createRemoteChatMutation, creatingSlot, folderCleanupOpen, folderCompare, folders, isMobile,
+    createRemoteChatMutation, creatingSlot, folderCleanupOpen, folderModeCompare, folders, isMobile,
     missingLanes, navigate, newChatMenuOpen, onMenuCloseAutoFocus, onOpenSlotInNewTab,
     paintedSidebarWidth, rawColumns, refuseCreateOffline, remoteCrewChatPreview, remoteCrewError, remoteCrewErrorId,
     restorePreBoardWidth, seedStateLanesMutation, setCleanupOpen, setFolderCleanupOpen, setFolderModal,
@@ -200,8 +200,8 @@ export function renderSidebarHeader(shell: SidebarScope): React.ReactNode {
                 <ImportSessionItem Item={DropdownMenuItem} />
                 {folders.length > 0 && (() => {
                   const folderRows = (() => {
-                    const roots = folders.filter(f => !f.parent_id).sort(folderCompare)
-                    const childrenOf = (pid: string) => folders.filter(f => f.parent_id === pid).sort(folderCompare)
+                    const roots = folders.filter(f => !f.parent_id).sort(folderModeCompare)
+                    const childrenOf = (pid: string) => folders.filter(f => f.parent_id === pid).sort(folderModeCompare)
                     const items: { f: ChatFolder; depth: number }[] = []
                     const walk = (list: ChatFolder[], depth: number) => { for (const f of list) { items.push({ f, depth }); walk(childrenOf(f.id), depth + 1) } }
                     walk(roots, 0)
