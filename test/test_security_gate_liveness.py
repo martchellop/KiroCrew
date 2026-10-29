@@ -595,7 +595,13 @@ def _url_payload_command(n: int) -> str:
 #: Raised by 177, from 32,970, for the ``rm`` floor reading each nested-shell payload
 #: through the shared reader, and ``shell_commands.redirect_hidden_payloads``: a redirect
 #: before the ``-c`` operand hides no payload. Deny-only: no allow widened.
-_PACKAGE_LINE_BUDGET = 33_147
+#: Raised by 63, from 33,147, for the ssh-to-self floor's glob program words: a glob
+#: that can name several ssh-family verbs is walked once per verb at its token
+#: (``_ssh_family_verbs``, ``_frame_verb_choices``, which also skips case patterns),
+#: nested payload verdicts are shared for one outer call
+#: (``_shares_nested_verdicts``), plus five manifest lines.
+#: The verdict stops depending on the hash seed.
+_PACKAGE_LINE_BUDGET = 33_210
 
 #: Ceiling on any ONE file in the package. This is what the bound is really for --
 #: a package total says nothing about a single file growing back into a second

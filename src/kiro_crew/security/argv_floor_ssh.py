@@ -18,9 +18,11 @@ in ``argv_floor_self`` and the host verdicts in ``argv_floor_hosts``, both below
 
 from __future__ import annotations
 
+import contextvars
 import fnmatch
+import functools
 import re
-from collections.abc import Iterator, Mapping
+from collections.abc import Callable, Iterator, Mapping
 
 # The reader names a test instruments on the facade are reached as attributes of
 # the reader module rather than bound here at import: the facade mirrors a patch
@@ -118,8 +120,7 @@ _EXPANSION_DEFAULT_RE = re.compile(r"\$\{[^{}:]*:[-=+?]([^{}]+)\}")
 
 
 _SSH_FAMILY_VERBS: frozenset[str] = frozenset({"ssh", "scp", "sftp", "rsync"})
-# The same verbs in a fixed order, for any loop that must not depend on the
-# per-process hash seed (frozenset iteration order follows PYTHONHASHSEED).
+# Fixed order for loops: frozenset order follows PYTHONHASHSEED.
 _SSH_FAMILY_VERBS_ORDERED: tuple[str, ...] = tuple(sorted(_SSH_FAMILY_VERBS))
 
 
@@ -556,10 +557,8 @@ def _ssh_family_verbs(token: str) -> "tuple[str, ...]":
     """Every ssh-family verb *token* can invoke, in sorted order; empty if none.
 
     Path-qualified (``/usr/bin/ssh``) and Windows (``ssh.exe``) spellings
-    resolve to the bare verb.  A glob basename that CAN expand to one
-    (``s?h``, see ``_GLOB_CHARS``) resolves to every verb it can name:
-    ``s??`` names both ``scp`` and ``ssh``, and the walk judges the line as
-    each of them, toward deny.
+    resolve to the bare verb.  A glob basename (``s?h``, see ``_GLOB_CHARS``)
+    resolves to every verb it can name: ``s??`` is both ``scp`` and ``ssh``.
     """
     base = _program_basename(_strip_redirect(token.strip("\"'")))
     if base.endswith(".exe"):
@@ -576,12 +575,7 @@ def _ssh_family_verbs(token: str) -> "tuple[str, ...]":
 
 
 def _ssh_family_verb(token: str) -> "str | None":
-    """The first verb ``_ssh_family_verbs`` gives for *token*, or None.
-
-    A glob naming several verbs has no single answer; the operand walk uses
-    ``_ssh_family_verbs`` and judges every one.  This answer is the first in
-    sorted order, so it never depends on set iteration order.
-    """
+    """The first of ``_ssh_family_verbs(token)`` in sorted order, or None."""
     verbs = _ssh_family_verbs(token)
     return verbs[0] if verbs else None
 
@@ -589,14 +583,14 @@ def _ssh_family_verb(token: str) -> "str | None":
 def _frame_verb_choices(
     tokens: "list[str]", bound_program_verbs: "Mapping[str, tuple[str, ...]]"
 ) -> "Iterator[tuple[int, str, str | None]]":
-    """``(index, token, verb)`` for each token of a frame, once per verb it can be.
+    """``(index, token, verb)`` per token, once per verb it can be (else ``None``).
 
-    A token that names no ssh-family verb yields once with ``None``.  One that
-    can name several (a glob such as ``s??``, or a copy of one) yields once per
-    verb, so the walk checks its operands under each.  Lazy on purpose: a
-    copy binding the walk records at one token applies to the tokens after it.
+    Lazy: a copy binding recorded at one token applies to the tokens after it.
     """
     for i, token in enumerate(tokens):
+        if token.endswith(")") and "(" not in token:  # a case pattern: never run
+            yield i, token, None
+            continue
         verbs = _ssh_family_verbs(token)
         if not verbs and bound_program_verbs:
             stripped_prog = token.strip("\"'")
@@ -935,6 +929,34 @@ def _function_call_binds_self(text: str) -> bool:
     return False
 
 
+# Nested payload verdicts for ONE outer ``_is_ssh_to_self`` call.  Every
+# per-verb walk of a glob reaches the same nested ``-e`` / proxycommand /
+# ``RSYNC_RSH`` value, so without this the cost is a power of the depth.
+_SSH_SELF_VERDICTS: "contextvars.ContextVar[dict[str, bool] | None]" = contextvars.ContextVar(
+    "_SSH_SELF_VERDICTS", default=None
+)
+
+
+def _shares_nested_verdicts(walk: "Callable[[str], bool]") -> "Callable[[str], bool]":
+    """Answer a repeat of the same text from ``_SSH_SELF_VERDICTS``; keep nothing after."""
+
+    @functools.wraps(walk)
+    def judged(text_lower: str) -> bool:
+        verdicts = _SSH_SELF_VERDICTS.get()
+        if verdicts is None:
+            scope = _SSH_SELF_VERDICTS.set({})
+            try:
+                return walk(text_lower)
+            finally:
+                _SSH_SELF_VERDICTS.reset(scope)
+        if text_lower not in verdicts:
+            verdicts[text_lower] = walk(text_lower)
+        return verdicts[text_lower]
+
+    return judged
+
+
+@_shares_nested_verdicts
 def _is_ssh_to_self(text_lower: str) -> bool:
     """True if *text_lower* opens an ssh/scp/sftp/rsync channel to THIS host.
 
@@ -1087,10 +1109,8 @@ def _is_ssh_to_self(text_lower: str) -> bool:
         xargs_prefix_index: "int | None" = None  # a bare ``xargs`` in this simple command
         # Once per FRAME, not once per verb token: see ``_is_credential_mint``.
         disqualified: "bool | None" = None
-        # A token that can be several verbs is walked once per verb (see
-        # ``_frame_verb_choices``).  The verb branch below only reads the
-        # frame state, so repeating it for the same token is safe; a token
-        # that is no verb comes through exactly once.
+        # A multi-verb token is walked once per verb; the verb branch only
+        # reads frame state, so the repeat is safe.
         for i, token, verb in _frame_verb_choices(tokens, bound_program_verbs):
             if verb is None:
                 stripped_tok = token.strip("\"'")
