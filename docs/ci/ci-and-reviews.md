@@ -1060,11 +1060,12 @@ its timeout starts; diagnose or roll back rather than raising that timeout.
 ### Larger runners for the review lanes and CodeQL
 
 Twenty-five `runs-on` sites draw on the `kirocrew-runners` larger-runner group
-by `group:` rather than `ubuntu-latest`, and fifteen more reach it conditionally
-by label (see **Five sites reach the group by LABEL**, **Four PR-time sites
-reach the group by LABEL** and **Six `ci.yml` lanes reach the group by LABEL**
-below), so forty sites in all can land on its cap -- which is the figure
-**Capacity** below is about. The twenty-five are the
+by `group:` rather than `ubuntu-latest`, and twenty-seven more reach it
+conditionally by label (see **Five sites reach the group by LABEL**, **Four
+PR-time sites reach the group by LABEL**, **Six `ci.yml` lanes reach the group
+by LABEL** and **Twelve more sites reach the group by LABEL** below), so
+fifty-two sites in all can land on its cap -- which is the figure **Capacity**
+below is about. The twenty-five are the
 six fork review lanes (`fork-opus-review`,
 `fork-gpt-review`, `fork-first-principles-review`, `fork-design-review`,
 `fork-ux-review`, and the three credentialed jobs of
@@ -1098,16 +1099,18 @@ at all.** It is org-scoped, so a personal fork -- which sits outside the org --
 can never obtain a runner from it, and a job that asks for one queues until the
 24-hour timeout instead of running. The first shape is a lane a personal fork
 can START, by `pull_request`, `workflow_dispatch` or `issues`: that is why
-`nightly.yml`, `gui-user-test.yml`, `issue-summary.yml`, `issue-triage.yml`,
-`build-desktop.yml` and `build-ffmpeg-decoder.yml` stay on `ubuntu-latest`
-however contended the shared pool gets. The second is a reusable workflow
+`push` or `schedule` -- `nightly.yml`, `gui-user-test.yml`,
+`issue-summary.yml`, `issue-triage.yml`, `build-desktop.yml`,
+`build-ffmpeg-decoder.yml`, `client-py.yml`, `crew-image-build.yml` and
+`fork-pr-label.yml` are all this shape, which is why every one of them takes
+the label form below rather than `group:`. The second is a reusable workflow
 another repository calls, because the callee's `runs-on` runs in the CALLER's
 context -- `internal-content-scan.yml`'s header promises any org repository can
 call it at "no repo-specific configuration". Both shapes bar the `group:` form
 only. A label inside a `github.repository == 'kirodotdev/KiroCrew'` conditional
 degrades to the hosted image wherever the group is unreachable, which is how the
-five fleet-fallback sites, the four PR-time sites and the two matrix jobs below
-reach it. The four fork helpers
+five fleet-fallback sites, the four PR-time sites, the twelve scheduled and
+event-driven sites and the two matrix jobs below reach it. The four fork helpers
 pass both tests outright, each carrying an `if` requiring
 `head.repo.full_name != github.repository` that is false inside a fork, which is
 why they took the `group:` form.
@@ -1169,9 +1172,10 @@ twenty-five group-targeted sites, not just CodeQL. The five fleet-fallback label
 sites below are covered by the same rule but have their own recipe, since a
 whole-line replacement there would take the fleet route out with it; the four
 PR-time label sites take the plain replacement, since they carry no fleet route
-to preserve; and of the six `ci.yml` label sites, the four single-OS lanes take
-the plain replacement while the two matrix lanes go back to
-`runs-on: ${{ matrix.os }}`.
+to preserve; and across the six `ci.yml` label sites and the twelve scheduled
+and event-driven ones, the fifteen single-OS lanes take the plain replacement
+while the three matrix lanes -- `backend-test-ipv6`, `new-test-stability` and
+nightly's `pod-scenarios` -- go back to `runs-on: ${{ matrix.os }}`.
 
 **Nothing gets faster.** A public-repository `ubuntu-latest` is already 4 vCPU
 and 16 GB, and `kirocrew-linux-4-core` is the same CPU and memory with roughly
@@ -1395,6 +1399,76 @@ the `runs-on` of `wheel-closure`, `native-redaction-gate` or
 the fallback from each line in turn reds exactly one test for the first three
 and nothing for the last three.
 
+#### Twelve more sites reach the group by LABEL, not by group
+
+These are additional to the sites counted above, and they spell the target
+differently: `runs-on: ${{ github.repository == 'kirodotdev/KiroCrew' &&
+'kirocrew-linux-4-core' || 'ubuntu-latest' }}`.
+
+| Workflow | Job |
+|---|---|
+| `gui-user-test.yml` | `gui-user-test` |
+| `issue-summary.yml` | `summarize` |
+| `issue-triage.yml` | `triage` |
+| `main-macos-failure-watch.yml` | `page` |
+| `main-red-pr-notice.yml` | `notice` |
+| `main-red-watch.yml` | `watch` |
+| `pr-readiness-sweep.yml` | `sweep` |
+| `nightly.yml` | `version`, `pod-scenarios` (Linux leg only), `process-leak-invariant` |
+| `build-desktop.yml` | `smoke-linux-packages` |
+| `build-ffmpeg-decoder.yml` | `publish` |
+
+**Why the label here, against the group preference above.** A group resolves
+only inside the organization that owns it. A fork running its own copy of one of
+these workflows would find no runner and wait forever, because nothing falls
+back. The label form carries its own fork fallback in the `||` leg, which is
+the whole reason to accept the rename fragility the paragraph above describes:
+if `kirocrew-linux-4-core` is renamed, these twelve lines break together and
+every one of them must be updated, where a `group:` reference would have
+survived. That is the trade, and it only pays where a fork can reach the
+workflow at all.
+
+**None of the twelve can hold a verdict pending.** None appears in
+`pr-readiness.yml`'s `workflow_specs` or in `merge-queue-readiness.yml`'s
+polled list, so none is a lane whose unfinished run keeps the required
+`PR Readiness` status pending. That is a different and weaker claim than "off
+the merge path", and for one of them it is the only claim that holds -- see
+the sweep below.
+
+Most never see a `pull_request` event at all: `issue-summary` and
+`issue-triage` fire on `issues`, `nightly`'s three jobs on `schedule` and
+`workflow_dispatch`, the three watchers on `workflow_run`, and
+`pr-readiness-sweep` on `schedule`. Two do see one and still occupy nothing.
+`build-desktop.yml` declares only `workflow_call`, so `smoke-linux-packages`
+runs for a caller that invokes it rather than on a pull request of its own.
+`build-ffmpeg-decoder.yml` genuinely fires on `pull_request`, paths-filtered to
+`scripts/build-ffmpeg.sh` and the workflow file, but its `publish` job is gated
+`if: inputs.publish`, and an input exists only on a `workflow_dispatch`, so on
+every pull-request run that job is skipped before a runner starts.
+
+**`pr-readiness-sweep` is the exception, and its queue time is on the merge
+path.** The sweep is how a completed lane reaches the `PR Readiness` verdict at
+all: `pr-readiness.yml` does not subscribe to the `completed` event of the
+workflows it monitors, so the scheduled sweep is what re-fires the recompute.
+A sweep that waits for a runner therefore delays a green verdict reaching the
+required status. It cannot make a verdict wrong, because the recompute is
+idempotent and stale-SHA guarded, and it cannot turn a red into a merge. But
+"nothing gets faster" below is about job duration, and queue position is
+exactly what this one job's delivery latency is made of, so moving it off the
+shared pool is the one case in this group where the move is also a latency
+argument.
+
+**Nothing gets faster**, for the reason the section above gives: same CPU and
+memory as a public-repository `ubuntu-latest`, so job durations should not
+move; only queue position does. Larger-runner minutes are billed even on a
+public repository, where standard runners are free and unlimited. Rollback is
+the same one-line move back to `runs-on: ubuntu-latest`, dropping the fork leg
+with it -- except on `pod-scenarios`, the one matrix lane among the twelve,
+which goes back to `runs-on: ${{ matrix.os }}` for the reason the two `ci.yml`
+matrix lanes above give: writing `ubuntu-latest` there drops the
+`|| matrix.os` fall-through and runs the macOS and Windows legs on Linux. No
+test reads that line, so the mistake is silent.
+
 **What is deliberately still on `ubuntu-latest`.** `security-scope-review.yml`
 is itself on that lane's own scope surface, so a diff touching it sets
 `in_scope=true` while giving the model no shell, flow or cron surface to propose
@@ -1426,9 +1500,11 @@ shared pool, and because these lanes feed `PR Readiness` the cost of being
 wrong shows up as slower merges rather than as a broken check.
 
 Rollback is per site and needs no AWS or runner-group change: restore
-`runs-on: ubuntu-latest` on the affected line -- except on the two `ci.yml`
-matrix lanes, where the line goes back to `runs-on: ${{ matrix.os }}` instead,
-so the rollback does not send the Windows leg to Linux. The five fleet-fallback
+`runs-on: ubuntu-latest` on the affected line -- except on the three matrix
+lanes (`ci.yml`'s `backend-test-ipv6` and `new-test-stability`, and nightly's
+`pod-scenarios`), where the line goes back to `runs-on: ${{ matrix.os }}`
+instead, so the rollback does not send a non-Linux leg to Linux. The five
+fleet-fallback
 sites are the exception twice over. It is not a whole-line replacement there, because the
 fleet route has to survive: drop the middle branch so the expression's tail is
 `|| 'ubuntu-latest' }}` again, and drop `_GROUP_THEN_HOSTED_TAIL` from that
