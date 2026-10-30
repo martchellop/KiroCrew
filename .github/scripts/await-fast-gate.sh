@@ -191,7 +191,10 @@ on_superseded() {
 # ago (so a job that `needs:` the others has had time to be created), the gate
 # is green in fact and the matrix is released with a warning saying why. Any
 # read failure, an unfinished or failed job, or a run awaiting fork approval
-# keeps the fail-closed exit. Read only, like every other call here.
+# keeps the fail-closed exit, and says in the log which condition it was: a
+# decline is otherwise indistinguishable from the barrier never having looked,
+# which leaves the only error naming the run-level status that is not what
+# withheld the release. Read only, like every other call here.
 ROLLUP_SETTLE=60
 JOBS_SEEN=""
 jobs_all_passed() {
@@ -211,24 +214,54 @@ jobs_all_passed() {
     echo "::warning::Could not read the jobs of Fast Gate run $gid, so its status is taken as read."
     return 1
   fi
+  # Every answer carries its reason, because a bare "no" is indistinguishable in
+  # the log from never having consulted the jobs at all. The conditions are the
+  # ones above and the verdict they produce is unchanged; only the text is new.
+  #
+  # Two guards on the text itself, both so the reason survives to be read:
+  #   * the whole verdict is collapsed onto one line (`gsub`, applied to every
+  #     branch rather than to the job names alone, so no field interpolated
+  #     here or added later can reopen it). `jq -r` prints an embedded newline
+  #     as a real break, which would cut the annotation short and let the
+  #     remainder be read as another runner command -- the one thing a
+  #     diagnostic must not do. Names are workflow-authored, so on a fork PR
+  #     they are the fork's text (which already supplies this step's own run:,
+  #     so this is legibility, not a trust boundary).
+  #   * a `completed_at` jq cannot parse drops out of $done (`try ... catch`)
+  #     instead of erroring the whole program, which would have reported the
+  #     catch-all "could not be parsed" over the real reason. Dropping it still
+  #     trips the count check below, so no input changes verdict.
   verdict="$(printf '%s' "$jobs" \
     | jq -r --argjson now "$(now)" --argjson settle "$ROLLUP_SETTLE" \
         '(.jobs // []) as $j
-         | if (.total_count // -1) <= 0 or ($j | length) != .total_count then "no"
-           elif ($j | all(.status == "completed"
-                          and (.conclusion == "success" or .conclusion == "skipped"))) | not
-           then "no"
-           elif ($j | any(.conclusion == "success")) | not then "no"
-           elif ($j | map(.completed_at // "" | select(. != "") | fromdateiso8601)
-                   | (length == ($j | length)) and (($now - max) >= $settle)) | not
-           then "no"
-           else "yes \($j | length)" end' 2>/dev/null || echo no)"
+         | ($j | map(select(.status != "completed"
+                            or (.conclusion != "success" and .conclusion != "skipped"))))
+             as $bad
+         | ($j | map(.completed_at // "" | select(. != "")
+                     | (try fromdateiso8601 catch empty))) as $done
+         | if (.total_count // -1) <= 0 or ($j | length) != .total_count
+           then "no the attempt lists \($j | length) job(s) against total_count=\(.total_count // -1)"
+           elif ($bad | length) > 0
+           then "no \($bad | length) of \($j | length) job(s) are not completed-green: "
+                + ($bad
+                   | map("\(.name // .id)=\(.status)/\(.conclusion // "null")")
+                   | join(", "))
+           elif ($j | any(.conclusion == "success")) | not
+           then "no all \($j | length) job(s) were skipped, so no gate ran"
+           elif ($done | length) != ($j | length)
+           then "no \(($j | length) - ($done | length)) of \($j | length) job(s) report no completed_at"
+           elif ($now - ($done | max)) < $settle
+           then "no the newest job finished \($now - ($done | max))s ago, inside the \($settle)s settle"
+           else "yes \($j | length)" end
+         | gsub("[\r\n]+"; " ")' 2>/dev/null \
+    || echo "no the jobs read could not be parsed")"
   case "$verdict" in
     yes\ *)
       JOBS_SEEN="${verdict#yes }"
       return 0
       ;;
   esac
+  echo "::warning::Fast Gate run $gid: its jobs do not prove it green, so its status is taken as read -- ${verdict#no }"
   return 1
 }
 
