@@ -595,7 +595,10 @@ def _url_payload_command(n: int) -> str:
 #: Raised by 177, from 32,970, for the ``rm`` floor reading each nested-shell payload
 #: through the shared reader, and ``shell_commands.redirect_hidden_payloads``: a redirect
 #: before the ``-c`` operand hides no payload. Deny-only: no allow widened.
-_PACKAGE_LINE_BUDGET = 33_147
+#: Raised by 7, from 33,147, for the ``kirocrew-bin`` entry in
+#: ``paths_lists._WRITE_PROTECTED_HOME_PATHS``: the file-edit tool may not write the
+#: link that decides which ``kirocrew`` an agent shell runs. Deny-only.
+_PACKAGE_LINE_BUDGET = 33_154
 
 #: Ceiling on any ONE file in the package. This is what the bound is really for --
 #: a package total says nothing about a single file growing back into a second
