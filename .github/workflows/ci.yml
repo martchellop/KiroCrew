@@ -2992,11 +2992,21 @@ jobs:
       # in `frontend-ratchets`, whose checkout carries what they need. So the
       # bounded deepening step this job used to run for the cap gate is gone
       # with it.
-      # The depth below is the bounded one #26131 set while the cap gate still
-      # lived here. Nothing in this job needs even that now; tightening it
-      # further is a separate change from the gate split.
+      #
+      # Because nothing here reads the remote, nothing here needs the token
+      # either. The retention rationale this checkout carried on `main` belonged
+      # to the hardcoded-UI-strings gate, which has moved to
+      # `frontend-ratchets`; the credential moved with it. Opting out rather
+      # than leaving it unexplained is what
+      # test_workflow_checkout_credentials.py requires, and `backend-lint`
+      # already runs this way.
+      #
+      # The depth is the bounded one #26131 set while the cap gate still lived
+      # here. Nothing in this job needs even that now; tightening it further is
+      # a separate change from the gate split.
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
+          persist-credentials: false
           fetch-depth: 2
 
       # CodeBuild images have no tool cache, so setup-node would resolve the
@@ -3069,9 +3079,11 @@ jobs:
     runs-on: ${{ needs.changes.outputs.linux_runner || 'ubuntu-latest' }}
     timeout-minutes: 20
     steps:
-      # persist-credentials retained (the default): the i18n and phantom-classes
-      # gates below run `git fetch origin` against the same remote, through the
-      # shared diff-base resolver script.
+      # persist-credentials retained: frontend-ratchets/Check for new hardcoded
+      # UI strings and the i18n suite below run `git fetch origin` against the
+      # same remote, through the shared diff-base resolver script. Carried over
+      # verbatim in meaning from `frontend-lint`, these steps' old home, so the
+      # runtime behaviour of the moved gates is unchanged.
       # Full history so the file line cap below can compute THIS change's scope
       # through scripts/ratchet_scope.py, which confirms HEAD^1 is a base commit
       # by ANCESTRY before it will diff HEAD^1..HEAD; a shallow clone has
