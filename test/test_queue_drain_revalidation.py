@@ -297,6 +297,33 @@ def test_unmarked_entry_in_unconstrained_slot_survives(tmp_path):
     assert [q["content"] for q in slot._queue] == ["hi"]
 
 
+def test_unsent_restored_cards_wait_and_a_sent_one_is_judged(tmp_path):
+    """A restored card carries no snapshot (the restore strips it) and no drain
+    runs it, so the sweep leaves it for the user. The card the user sends, named
+    or marked chosen, is judged like any unmarked entry and fails closed."""
+    from kiro_crew.dashboard.slot_queue_repository import (
+        RESTORED_QUEUE_KEY,
+        RESTORED_SEND_CHOSEN_KEY,
+    )
+
+    state = _make_state(tmp_path)
+    slot = _link(state.get_or_create_slot("chat-1"))
+    slot._queue = [
+        {"id": "r1", "content": "old one", RESTORED_QUEUE_KEY: True},
+        {"id": "r2", "content": "old two", RESTORED_QUEUE_KEY: True},
+    ]
+
+    cr._drop_stale_admissions(state, slot)
+    assert [q["id"] for q in slot._queue] == ["r1", "r2"]
+
+    cr._drop_stale_admissions(state, slot, selected_id="r2")
+    assert [q["id"] for q in slot._queue] == ["r1"]
+
+    slot._queue[0][RESTORED_SEND_CHOSEN_KEY] = True
+    cr._drop_stale_admissions(state, slot)
+    assert slot._queue == []
+
+
 def test_cron_and_subagent_entries_are_exempt(tmp_path):
     """Cron notifications and sub-agent completions are minted fresh by trusted
     internal producers for THIS slot's own turn lifecycle — channel-born

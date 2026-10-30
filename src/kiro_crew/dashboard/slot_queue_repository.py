@@ -81,6 +81,14 @@ MAX_DURABLE_QUEUE_SCAN = 4 * MAX_DURABLE_QUEUE_ENTRIES
 #: consumer asks instead of trying to tell the two apart from the actor alone.
 RESTORED_QUEUE_KEY = "_restored_from_disk"
 
+#: Marks a restored entry the user picked with a card's "run this next" while a
+#: turn was running. That click promotes the card and stops the turn, and the
+#: turn's end drains the queue with no card named, so the drain reads this mark
+#: to run the chosen card instead of holding it like every other restored entry.
+#: Process-local for the same reason as :data:`RESTORED_QUEUE_KEY`: the writer
+#: never emits it, so a restart forgets the choice and the card waits again.
+RESTORED_SEND_CHOSEN_KEY = "_restored_send_chosen"
+
 _DURABLE_QUEUE_KEYS: tuple[str, ...] = (
     "id",
     "content",

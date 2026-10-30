@@ -35,7 +35,7 @@ from kiro_crew.dashboard.session_directive_apply import (
     REFUSAL_SELF_WAKE_META_KEY,
     REFUSAL_WAKE_LOOP_ID_META_KEY,
 )
-from kiro_crew.dashboard.slot_queue_repository import RESTORED_QUEUE_KEY
+from kiro_crew.dashboard.slot_queue_repository import RESTORED_QUEUE_KEY, RESTORED_SEND_CHOSEN_KEY
 from kiro_crew.dashboard.state import CRON_NOTIFY_RE, SUBAGENT_COMPLETION_PREFIXES
 from kiro_crew.history import HUMAN_TURN_META_KEY
 
@@ -529,7 +529,7 @@ async def _start_next_queued_turn(
     # qualifying.
     # Everything below — the note flush peeking at queue[0], the user-intervention
     # purge, the dequeue itself — must see only entries that may still deliver.
-    _drop_stale_admissions(state, slot)
+    _drop_stale_admissions(state, slot, selected_id=required_queue_id)
     # The sweep may have dropped that recovery, leaving a new turn at the head.
     if (
         predecessor_actor
@@ -648,6 +648,26 @@ async def _start_next_queued_turn(
         next_msg, consumed = _dequeue_next_system_message(slot)
     elif auto_priority and (run := responsive_chat.dequeue_waiting_run(slot)) is not None:
         next_msg, consumed = run
+    elif not required_queue_id and any(item.get(RESTORED_QUEUE_KEY) for item in slot._queue):
+        # Restored entries are handed back as cards the user sends, edits or
+        # deletes: their turn may have run un-persisted, so no drain resends
+        # them on its own (a turn's end, a Resume's recovery). Only a card the
+        # user sent runs one: named here (``required_queue_id``), or marked
+        # chosen by a "run this next" that stopped a running turn. Entries
+        # queued in this process still drain, in order, past the waiting cards.
+        live = next(
+            (
+                i
+                for i, item in enumerate(slot._queue)
+                if not item.get(RESTORED_QUEUE_KEY) or item.get(RESTORED_SEND_CHOSEN_KEY)
+            ),
+            None,
+        )
+        if live is None:
+            next_msg, consumed = None, []
+        else:
+            popped = slot.queue_pop(live)
+            next_msg, consumed = popped["content"], [popped]
     else:
         # ``required_queue_id`` is an explicit request to run exactly one card.
         # Promotion selects it; merging here would consume unrelated queued user
