@@ -247,6 +247,61 @@ function OwnerSetupRequired({
   )
 }
 
+/**
+ * The enterprise gate's sign-in screen: the gateway reads Crew's own vault sign-in,
+ * so the owner is shown that one command (a code value from the gateway, never a
+ * catalog string). A viewer who is not the owner is told to ask the owner.
+ */
+function EnterpriseSignInRequired({
+  command,
+  owner,
+  retrying,
+  onRetry,
+}: {
+  command: string
+  owner: boolean
+  retrying: boolean
+  onRetry: () => void
+}) {
+  return (
+    <SetupShell>
+      <div data-testid="enterprise-sign-in-required">
+        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-accent-subtle text-accent">
+          <ShieldCheck className="lucide-inline" />
+        </div>
+        <p className="mt-6 text-[12px] font-bold uppercase tracking-[0.16em] text-accent">
+          {i18nT('components.kiroPrerequisiteGate.sign_in_required')}
+        </p>
+        <h1 className="mt-2 text-3xl font-bold tracking-tight text-text-strong">
+          {i18nT('components.kiroPrerequisiteGate.sign_in_again_to_continue')}
+        </h1>
+        {owner ? (
+          <>
+            <p className="mt-3 max-w-lg text-sm leading-relaxed text-muted">
+              {i18nT('components.kiroPrerequisiteGate.relock_run_in_terminal')}
+            </p>
+            <div className="mt-3">
+              <CopyCommand>
+                <code>{command}</code>
+              </CopyCommand>
+            </div>
+          </>
+        ) : (
+          <p className="mt-3 max-w-lg text-sm leading-relaxed text-muted">
+            {i18nT('components.kiroPrerequisiteGate.relock_ask_owner')}
+          </p>
+        )}
+        <div className="mt-6">
+          <Btn type="button" disabled={retrying} onClick={onRetry}>
+            <RefreshCw className={`lucide-inline ${retrying ? 'animate-spin' : ''}`} />
+            {i18nT('components.kiroPrerequisiteGate.check_again')}
+          </Btn>
+        </div>
+      </div>
+    </SetupShell>
+  )
+}
+
 // Local memory of first-run completion, so a COLD load (empty React Query
 // cache) can tell a returning user from a genuine first run before — or
 // without — a successful status response. The gateway remains the authority:
@@ -1663,6 +1718,7 @@ export default function KiroPrerequisiteGate({ children }: { children: ReactNode
         {children}
         <RelockNotice
           owner={relockStatus.setup_allowed !== false}
+          command={relockStatus.enterprise_sign_in_command}
           exactCommandElsewhere={relockStatus.bundled_cli === true
             || (!!relockStatus.login_command && relockStatus.login_command !== BARE_LOGIN_COMMAND)}
         />
@@ -1699,6 +1755,23 @@ export default function KiroPrerequisiteGate({ children }: { children: ReactNode
   }
   // Enterprise login gate closed: the gateway refuses every API but sign-in, so
   // none of the bypasses below may hand over the dashboard -- not `ready`, not an
+  // established install, not another harness. The first-run screens still run
+  // in order, so a missing CLI or a sandbox refusal shows its own remedy before
+  // the sign-in step.
+  // An enterprise gate reads Crew's own vault sign-in, so its sign-in screen names
+  // the vault command, never kiro-cli's login and never a kiro-cli install step.
+  if (enterpriseLocked && prerequisite.enterprise_sign_in_command) {
+    return unlessRelocked(
+      <EnterpriseSignInRequired
+        command={prerequisite.enterprise_sign_in_command}
+        owner={prerequisite.setup_allowed !== false}
+        retrying={retrying}
+        onRetry={retryStatus}
+      />,
+    )
+  }
+  // An enterprise build's closed gate shows sign-in, not the app, whatever the
+  // probe says about readiness: being ready can mean the login probe passed on an
   // established install, not another harness. The first-run screens still run
   // in order, so a missing CLI or a sandbox refusal shows its own remedy before
   // the sign-in step.

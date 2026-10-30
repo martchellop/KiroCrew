@@ -37,9 +37,12 @@ export const BARE_LOGIN_COMMAND = 'kiro-cli login'
 export default function KiroPrerequisiteRelockNotice({
   owner,
   exactCommandElsewhere,
+  command,
 }: {
   owner: boolean
   exactCommandElsewhere: boolean
+  /** The enterprise gate's own sign-in command; shown instead of `kiro-cli login`. */
+  command?: string
 }) {
   return createPortal(
     (
@@ -52,7 +55,14 @@ export default function KiroPrerequisiteRelockNotice({
           <ShieldCheck className="lucide-inline" />
           {i18nT('components.kiroPrerequisiteGate.sign_in_required')}
         </p>
-        {owner && exactCommandElsewhere ? (
+        {owner && command ? (
+          <>
+            <p className="mt-1 text-sm font-semibold text-text-strong">
+              {i18nT('components.kiroPrerequisiteGate.relock_run_in_terminal')}
+            </p>
+            <code className="mt-2 block font-mono text-[13px] text-text">{command}</code>
+          </>
+        ) : owner && exactCommandElsewhere ? (
           <p className="mt-1 text-sm font-semibold leading-relaxed text-text-strong">
             {i18nT('components.kiroPrerequisiteGate.relock_exact_command_hint')}
           </p>

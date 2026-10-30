@@ -78,7 +78,16 @@ def _with_gate_state(request: web.Request, snapshot: dict[str, Any]) -> dict[str
     """
     if not login_screen_required(request.app):
         return snapshot
-    return {**snapshot, "initial_setup_complete": False, "enterprise_login_required": True}
+    # The enterprise gate reads Crew's vault sign-in, not kiro-cli's, so the
+    # remedy the sign-in screen and relock notice name is the vault command.
+    from kiro_crew.enterprise_sign_in import VAULT_SIGN_IN_COMMAND
+
+    return {
+        **snapshot,
+        "initial_setup_complete": False,
+        "enterprise_login_required": True,
+        "enterprise_sign_in_command": VAULT_SIGN_IN_COMMAND,
+    }
 
 
 def _caller(request: web.Request) -> str:
@@ -187,7 +196,12 @@ async def api_kiro_prerequisite_status(request: web.Request) -> web.Response:
             "ready": bool(snapshot.get("ready")),
             "initial_setup_complete": bool(snapshot.get("initial_setup_complete")),
             **(
-                {"enterprise_login_required": True}
+                {
+                    "enterprise_login_required": True,
+                    # A fixed command, not host state: it picks the sign-in screen,
+                    # which tells a non-owner to ask the owner and shows no command.
+                    "enterprise_sign_in_command": snapshot.get("enterprise_sign_in_command", ""),
+                }
                 if snapshot.get("enterprise_login_required")
                 else {}
             ),

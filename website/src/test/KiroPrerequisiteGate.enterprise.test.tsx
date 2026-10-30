@@ -273,6 +273,43 @@ describe('KiroPrerequisiteGate enterprise login gate', () => {
     expect(screen.getByLabelText('draft')).toHaveValue('unsaved json')
   })
 
+  // The gate reads Crew's vault sign-in: the gateway serves its command, and no
+  // enterprise surface may name kiro-cli's login then.
+  const VAULT_COMMAND = 'kirocrew kas login --provider idc --start-url <your start URL>'
+  const vaultLocked = { ...locked, enterprise_sign_in_command: VAULT_COMMAND }
+
+  it('names the vault sign-in on the sign-in screen, never kiro-cli login', async () => {
+    vi.mocked(api.kiroPrerequisite).mockResolvedValue(
+      status({ ...vaultLocked, initial_setup_complete: true, installed: false, authenticated: true }),
+    )
+    renderGate()
+    const screenEl = await screen.findByTestId('enterprise-sign-in-required')
+    expect(within(screenEl).getByText(VAULT_COMMAND).tagName).toBe('CODE')
+    expect(screen.queryByText('kiro-cli login')).not.toBeInTheDocument()
+    // No kiro-cli install step: the vault gate does not need kiro-cli.
+    expect(screen.queryByText('Set up Kiro')).not.toBeInTheDocument()
+    expect(screen.queryByText('Dashboard loaded')).not.toBeInTheDocument()
+  })
+
+  it('tells a non-owner on the vault sign-in screen to ask the owner', async () => {
+    vi.mocked(api.kiroPrerequisite).mockResolvedValue(
+      status({ ...vaultLocked, initial_setup_complete: true, setup_allowed: false }),
+    )
+    renderGate()
+    const screenEl = await screen.findByTestId('enterprise-sign-in-required')
+    expect(within(screenEl).getByText(/Ask the .* owner to sign this gateway in again/)).toBeInTheDocument()
+    expect(screen.queryByText(VAULT_COMMAND)).not.toBeInTheDocument()
+  })
+
+  it('names the vault sign-in in the relock notice, never kiro-cli login', async () => {
+    await relock(<Draft />, status({ ...vaultLocked, initial_setup_complete: true }))
+    const notice = screen.getByTestId('enterprise-relock-notice')
+    expect(within(notice).getByText(VAULT_COMMAND).tagName).toBe('CODE')
+    expect(within(notice).queryByText('kiro-cli login')).not.toBeInTheDocument()
+    expect(notice.querySelectorAll('button, a, input, select, textarea, [tabindex]')).toHaveLength(0)
+    expect(screen.getByLabelText('draft')).toHaveValue('unsaved json')
+  })
+
   it('opens the dashboard once the gate reports open', async () => {
     vi.mocked(api.kiroPrerequisite)
       .mockResolvedValueOnce(status({ ...locked, initial_setup_complete: true }))

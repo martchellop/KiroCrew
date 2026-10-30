@@ -617,12 +617,15 @@ async def test_closed_gate_status_asks_an_established_install_to_sign_in(
         body = await (await client.get("/api/kiro-prerequisite")).json()
         assert body["initial_setup_complete"] is False
         assert body["enterprise_login_required"] is True
+        # The gate reads Crew's vault sign-in, so the remedy is the vault command.
+        assert body["enterprise_sign_in_command"].startswith("kirocrew kas login --provider idc")
 
         login.signed_in = True
         await watch.check()
         body = await (await client.get("/api/kiro-prerequisite")).json()
         assert body["initial_setup_complete"] is True
         assert "enterprise_login_required" not in body
+        assert "enterprise_sign_in_command" not in body
     finally:
         await client.close()
 

@@ -503,7 +503,12 @@ class TestPinnedProfile:
         vault()
         epf.pinned_scope()
         install_ceiling(governance.parse_policy(json.loads(epf.fetch(_request()).body)))
-        monkeypatch.setattr("kiro_crew.auth.bridge.default_token_store", lambda: None)
+        # A real sign-out: the vault holds no identity any more.
+        from kiro_crew.auth.bridge import default_token_store
+
+        store = default_token_store()
+        store.delete(store.resolve().identity)
+        assert store.holds_no_identity()
         outcome = pd.refresh_now(force=True)
         assert outcome.status == pd.REFRESH_REJECTED
         assert "account changed" in outcome.detail
