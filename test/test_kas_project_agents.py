@@ -190,6 +190,20 @@ async def test_a_relative_project_prompt_may_not_escape_the_checkout(layout):
 
 
 @pytest.mark.asyncio
+async def test_a_project_prompt_symlinked_out_of_the_checkout_is_refused(layout, tmp_path):
+    # A trusted user-level spec may climb with `..`; a checkout's may not, and a
+    # link inside the checkout is judged by where it points.
+    _user, checkout, project = layout
+    outside = tmp_path / "notes.md"
+    outside.write_text("the user's own notes", encoding="utf-8")
+    (project / "p.md").symlink_to(outside)
+    _write(project, "proj", {"name": "proj", "prompt": "file://./p.md"})
+
+    with pytest.raises(AcpRuntimeError, match="escapes the agent directory"):
+        await _project("proj", checkout)
+
+
+@pytest.mark.asyncio
 async def test_an_unreadable_project_only_spec_refuses_the_session(layout):
     _user, checkout, project = layout
     (project / "proj.json").write_text("{not json", encoding="utf-8")
