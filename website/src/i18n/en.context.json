@@ -928,6 +928,8 @@
     "crewWorkerKit.done_replaced": "Sentence in the confirmation after an add succeeds, shown when it replaced the crewmate's behavior directions. May follow the \"Added N to NAME.\" sentence or stand alone.",
     "crewEditorNext.band_remove_stale": "Error in the mate abilities view when Remove is refused because the displayed revision changed; nothing was removed, the list refreshes, and the user must check it and press the Remove button again.",
     "pages.developer.agentBackendTab.pi": "Name of the Pi coding-agent harness, shown wherever an agent harness is named (Settings > Agent Harness, a mate's Harness setting). A product name: keep it in Latin script, unchanged; not the mathematical constant.",
-    "components.crewMode.ultra_ms_now": "Right-hand label on a running milestone row in the Ultra Mode Crew tab (Status view): the work is happening at this moment. Not a request to act now."
+    "components.crewMode.ultra_ms_now": "Right-hand label on a running milestone row in the Ultra Mode Crew tab (Status view): the work is happening at this moment. Not a request to act now.",
+    "apps.workflows.workflowsPage.view_author": "Tab in the Workflows page's two-way switch that opens the editor where the user writes a workflow script. Means 'write / create', NOT the noun 'author' (a person).",
+    "apps.workflows.workflowsPage.view_runs": "Tab in the Workflows page's two-way switch, beside 'Author', that opens the list of past and running workflow runs. A plural NOUN ('the runs'), NOT the verb 'run'."
   }
 }
