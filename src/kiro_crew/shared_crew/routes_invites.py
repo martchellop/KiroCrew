@@ -294,23 +294,54 @@ async def api_avatar(request: web.Request) -> web.Response:
 
 
 def decorate_people(body: dict[str, Any]) -> dict[str, Any]:
-    """Attach the alias and avatar bound to each tailnet row's verified login.
+    """Attach the name and picture bound to each tailnet row's verified login.
 
     Only a row whose provenance is a daemon-verified tailnet peer is matched, so a
     session creator read back from stored attribution never borrows an alias.
+    A row whose stable user id is known carries it as ``tailscale_user_id`` (the
+    key the display route edits). A display record anyone set wins over the
+    alias and picture an accepted invite carried. A local operator row is the
+    person who runs this Crew, so it carries this machine's own Tailscale user
+    id when the daemon reported it, and can be named like anyone else.
     """
+    from kiro_crew.dashboard import tailnet_live_allowlist
+
     members = invites.members_by_login()
+    display = store.display_overrides()
+    display_by_login = {
+        str(d.get("login") or "").strip().lower(): uid for uid, d in display.items()
+    }
+    owner_id = access_set.owner_user_id()
     for row in body.get("people") or []:
+        if row.get("provenance") == Provenance.LOCAL_OPERATOR.value:
+            shown = display.get(owner_id) if owner_id else None
+            if owner_id:
+                row["tailscale_user_id"] = owner_id
+            if shown:
+                row["member"] = {
+                    "alias": shown.get("alias") or "",
+                    "avatar_id": shown.get("avatar_id") or "",
+                    "profile_pic_url": "",
+                }
+            continue
         if row.get("provenance") not in _TAILNET_PROVENANCE:
             continue
         principal = row.get("principal") or {}
         login = str((principal.get("display") or {}).get("login") or "").strip().lower()
         member = members.get(login)
-        if member:
+        user_id = (
+            str((member or {}).get("user_id") or "")
+            or tailnet_live_allowlist.user_id_for(login)
+            or display_by_login.get(login, "")
+        )
+        if user_id:
+            row["tailscale_user_id"] = user_id
+        shown = display.get(user_id) if user_id else None
+        if member or shown:
             row["member"] = {
-                "alias": member["alias"],
-                "avatar_id": member["avatar_id"],
-                "profile_pic_url": member["profile_pic_url"],
+                "alias": (shown or member or {}).get("alias") or "",
+                "avatar_id": (shown or member or {}).get("avatar_id") or "",
+                "profile_pic_url": (member or {}).get("profile_pic_url") or "",
             }
     return body
 
