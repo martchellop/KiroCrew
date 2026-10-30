@@ -48,6 +48,7 @@ Object.defineProperty(window, 'matchMedia', {
 })
 
 import ChatPane from '../components/ChatPane'
+import { ThemeProvider } from '../hooks/useTheme'
 
 const SLOT = 'chat-1-stacking'
 
@@ -55,13 +56,13 @@ const SLOT = 'chat-1-stacking'
  *  and the mobile workspace panel (z-[47]) in pages/chat/page/. */
 const SHELL_OVERLAY_FLOOR = 46
 
-function mount(props: Partial<React.ComponentProps<typeof ChatPane>> = {}) {
+function mount(props: Partial<React.ComponentProps<typeof ChatPane>> = {}, slot: Record<string, unknown> = {}) {
   const store = configureStore({
     reducer: { dashboard: dashboardReducer, chat: chatReducer, notifications: notificationsReducer },
     preloadedState: {
       dashboard: {
         status: null, connected: true,
-        slots: [{ key: SLOT, title: 'Stacking pane', messages: 0, running: false, mode: '', pending_approval: false, waiting_for_input: false, last_activity_ts: '2026-09-01T00:00:00Z' }],
+        slots: [{ key: SLOT, title: 'Stacking pane', messages: 0, running: false, mode: '', pending_approval: false, waiting_for_input: false, last_activity_ts: '2026-09-01T00:00:00Z', ...slot }],
         slotsLoaded: true,
         unreadSlots: [], refreshTrigger: 0, approvalMode: 'normal',
         subagentRunning: {}, subagentDetails: {}, subagentText: {},
@@ -73,9 +74,11 @@ function mount(props: Partial<React.ComponentProps<typeof ChatPane>> = {}) {
   return render(
     <Provider store={store}>
       <QueryClientProvider client={qc}>
+        <ThemeProvider>
         <MemoryRouter>
           <ChatPane slotKey={SLOT} {...props} />
         </MemoryRouter>
+        </ThemeProvider>
       </QueryClientProvider>
     </Provider>,
   )
@@ -128,5 +131,24 @@ describe('ChatPane title row leading edge', () => {
     // Ahead of the title, so it reads as the row's first element.
     expect(control.compareDocumentPosition(row(container).querySelector('.truncate') as Element) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
     expect(row(container).querySelector('[data-pane-leading-divider]')).toBeNull()
+  })
+})
+
+describe('ChatPane title row session colour', () => {
+  const row = (container: HTMLElement) => container.querySelector('[data-pane-title-row]') as HTMLElement
+  const dot = (container: HTMLElement) => container.querySelector('[data-testid="chat-pane-status-dot"]') as HTMLElement
+
+  it('keeps the neutral header and status dot for an uncoloured session', () => {
+    const { container } = mount()
+    expect(row(container).className).not.toContain('chat-header-colored')
+    expect(dot(container).className).toContain('bg-accent')
+  })
+
+  it('tints the header and the dot with the session color_hex', () => {
+    const { container } = mount({}, { color_hex: '#abcdef' })
+    expect(row(container).className).toContain('chat-header-colored')
+    expect(row(container).style.getPropertyValue('--session-color')).toBe('#abcdef')
+    expect(dot(container).className).toContain('chat-header-dot')
+    expect(dot(container).className).not.toContain('bg-accent')
   })
 })

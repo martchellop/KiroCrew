@@ -2,17 +2,20 @@ import { describe, it, expect } from 'vitest'
 import {
   generatePalette, generateContrastRamp, generateHarmony,
   parseColor, computePaletteBoost, resolveDefaultColor, colorName,
+  resolveSessionColor, headerBandStyle, CATEGORICAL_HUES,
   PALETTE_NAMES, PALETTE_SIZE, INTENSITY_NAMES, INTENSITY_THRESHOLDS,
 } from '../utils/sessionColors'
 
 const SEED = '#10b981'
+// The theme-derived palettes; 'categorical' is a fixed 12-hue list tested on its own.
+const GENERATED_PALETTES = PALETTE_NAMES.filter(p => p !== 'categorical')
 const DARK_BG = '#12141a'
 const LIGHT_BG = '#fafafa'
 const HEX_RE = /^#[0-9a-f]{6}$/
 
 describe('generatePalette', () => {
   it('returns 7 hex colors for each strategy', () => {
-    for (const p of PALETTE_NAMES) {
+    for (const p of GENERATED_PALETTES) {
       const colors = generatePalette(SEED, p, DARK_BG)
       expect(colors).toHaveLength(PALETTE_SIZE)
       colors.forEach(c => expect(c).toMatch(HEX_RE))
@@ -20,13 +23,13 @@ describe('generatePalette', () => {
   })
 
   it('returns 7 colors on light backgrounds', () => {
-    for (const p of PALETTE_NAMES) {
+    for (const p of GENERATED_PALETTES) {
       expect(generatePalette(SEED, p, LIGHT_BG)).toHaveLength(PALETTE_SIZE)
     }
   })
 
   it('produces distinct colors (no duplicates)', () => {
-    for (const p of PALETTE_NAMES) {
+    for (const p of GENERATED_PALETTES) {
       expect(new Set(generatePalette(SEED, p, DARK_BG)).size).toBe(PALETTE_SIZE)
     }
   })
@@ -215,7 +218,7 @@ describe('text-strong fallback', () => {
 })
 
 describe('constants', () => {
-  it('has 4 palette names', () => { expect(PALETTE_NAMES).toEqual(['trailhead', 'horizon', 'voyage', 'odyssey']) })
+  it('has 5 palette names', () => { expect(PALETTE_NAMES).toEqual(['trailhead', 'horizon', 'voyage', 'odyssey', 'categorical']) })
   it('has 5 intensity names', () => { expect(INTENSITY_NAMES).toHaveLength(5) })
   it('does not include removed palettes', () => {
     for (const old of ['wide', 'narrow', 'tight', 'radix', 'tailwind']) expect(PALETTE_NAMES).not.toContain(old)
@@ -225,5 +228,85 @@ describe('constants', () => {
     expect(INTENSITY_THRESHOLDS.clear).toBeLessThan(INTENSITY_THRESHOLDS.vivid)
     expect(INTENSITY_THRESHOLDS.vivid).toBeLessThan(INTENSITY_THRESHOLDS.bold)
     expect(INTENSITY_THRESHOLDS.bold).toBeLessThan(INTENSITY_THRESHOLDS.intense)
+  })
+})
+
+describe('categorical palette', () => {
+  it('returns the 12 fixed hues regardless of seed and theme', () => {
+    expect(generatePalette(SEED, 'categorical', DARK_BG)).toEqual([...CATEGORICAL_HUES])
+    expect(generatePalette('#808080', 'categorical', LIGHT_BG)).toEqual([...CATEGORICAL_HUES])
+    expect(new Set(CATEGORICAL_HUES).size).toBe(12)
+    CATEGORICAL_HUES.forEach(c => expect(c).toMatch(HEX_RE))
+  })
+})
+
+describe('resolveSessionColor', () => {
+  const palette = ['#111111', '#222222', '#333333']
+
+  it('prefers the session color_hex over its index and the agent color', () => {
+    expect(resolveSessionColor({ color_hex: '#abcdef', color_index: 1 }, palette, '#00ff00')).toEqual({ hex: '#abcdef', index: null })
+  })
+
+  it('uses an in-range color_index before the agent color', () => {
+    expect(resolveSessionColor({ color_index: 2 }, palette, '#00ff00')).toEqual({ hex: '#333333', index: 2 })
+  })
+
+  it('falls back to a valid agent color when the index is absent or out of range', () => {
+    expect(resolveSessionColor({ color_index: null }, palette, '#00ff00')).toEqual({ hex: '#00ff00', index: null })
+    expect(resolveSessionColor({ color_index: 9 }, palette, '#00ff00')).toEqual({ hex: '#00ff00', index: null })
+  })
+
+  it('returns null for an uncoloured session or a malformed agent color', () => {
+    expect(resolveSessionColor(undefined, palette)).toBeNull()
+    expect(resolveSessionColor({ color_hex: '', color_index: -1 }, palette, 'green')).toBeNull()
+  })
+})
+
+describe('headerBandStyle', () => {
+  const boost = { idlePct: [5, 6], activePct: [30, 70], hoverPct: [12, 13], mutedColors: ['#999', '#888'] }
+  const boostFor = () => ({ idlePct: [4], activePct: [24], hoverPct: [11], mutedColors: ['#777'] })
+
+  it('uses the idle blend for an indexed color and carries the muted colour adapted to it', () => {
+    expect(headerBandStyle({ hex: '#222222', index: 1 }, boost, boostFor)).toEqual({
+      '--session-color': '#222222', '--session-band-pct': '6%', '--session-band-edge-pct': '26%', '--muted': '#888',
+    })
+  })
+
+  it('caps a strong idle blend at 18% for the header band', () => {
+    const strong = () => ({ idlePct: [60], activePct: [80], hoverPct: [67], mutedColors: ['#777'] })
+    expect(headerBandStyle({ hex: '#abcdef', index: null }, boost, strong)).toEqual({
+      '--session-color': '#abcdef', '--session-band-pct': '18%', '--session-band-edge-pct': '38%', '--muted': '#777',
+    })
+  })
+
+  const lum = (c: number[]) => {
+    const [r, g, bl] = c.map(v => { const s = v / 255; return s <= 0.03928 ? s / 12.92 : ((s + 0.055) / 1.055) ** 2.4 })
+    return 0.2126 * r + 0.7152 * g + 0.0722 * bl
+  }
+  const contrast = (fg: string, bandHex: string, bg: string, style: Record<string, string>) => {
+    const band = parseInt(style['--session-band-pct'], 10) / 100
+    const behind = parseColor(bandHex)!.map((v, k) => v * band + parseColor(bg)![k] * (1 - band))
+    const a = lum(parseColor(fg)!), z = lum(behind)
+    return (Math.max(a, z) + 0.05) / (Math.min(a, z) + 0.05)
+  }
+
+  it('keeps the title muted colour readable over a white band on a dark theme', () => {
+    const bg = '#2e3440', muted = '#949eb3', text = '#d8dee9'
+    const b = computePaletteBoost(['#ffffff'], bg, muted, text, true, 'clear', '#eceff4')
+    const style = headerBandStyle({ hex: '#ffffff', index: null }, b, () => b)
+    expect(contrast(style['--muted'], '#ffffff', bg, style)).toBeGreaterThan(3)
+  })
+
+  it('keeps the title readable over a black band on a light theme at intense intensity', () => {
+    const bg = '#d5d6db', muted = '#9699a3', text = '#343b58'
+    const b = computePaletteBoost(['#000000'], bg, muted, text, false, 'intense', text)
+    const style = headerBandStyle({ hex: '#000000', index: null }, b, () => b)
+    expect(contrast(text, '#000000', bg, style)).toBeGreaterThan(4.5)
+    expect(contrast(style['--muted'], '#000000', bg, style)).toBeGreaterThan(3)
+  })
+
+  it('leaves the band to the CSS default when no boost is available', () => {
+    expect(headerBandStyle({ hex: '#abcdef', index: null }, boost, () => ({ idlePct: [], activePct: [], hoverPct: [], mutedColors: [] })))
+      .toEqual({ '--session-color': '#abcdef' })
   })
 })

@@ -42,6 +42,8 @@ import { sessionMemoryTag } from '../lib/agentMemorySource'
 import { SlotProvider } from '../providers/SlotContext'
 import { useProvider } from '../providers'
 import { useConnectionsUiEnabled } from '../hooks/useConnectionsUi'
+import { useSessionPalette } from '../hooks/useSessionPalette'
+import { resolveSessionColor, headerBandStyle } from '../utils/sessionColors'
 import { legacyCodexEffort } from '../hooks/useInteractiveModels'
 import { selectionCapabilitiesFailed } from '../lib/effort'
 import { isUnpinnedModel } from '../lib/jevRoute'
@@ -511,6 +513,14 @@ export default function ChatPane({
     jevRouteOn, modelDD, anchorAgentBtn, anchorModelBtn, shownModel, effortSupported, defaultEffort, effectiveEffort,
     chipDefault, modelMarker,
   } = pickerModels
+  // The pane header carries the same session colour as the sidebar row.
+  const headerPalette = useSessionPalette()
+  const headerColor = resolveSessionColor(
+    paneSlot,
+    headerPalette.paletteColors,
+    paneSlot?.agent ? installedAgents.find(a => a.name === paneSlot.agent)?.session_color : null,
+  )
+  const headerColorStyle = headerColor ? headerBandStyle(headerColor, headerPalette.boost, headerPalette.boostFor) : undefined
 
   // One-time hydrate of this slot's message history via React Query + the api
   // client (caching + cross-pane dedup; staleTime Infinity keeps it one-shot —
@@ -697,7 +707,7 @@ export default function ChatPane({
         } as React.CSSProperties}
       >
         {!frameless && (
-        <div data-pane-title-row className={`@container/panehead group/header relative z-50 flex items-center gap-2 pr-3 py-2 border-b border-border bg-card shrink-0 transition-[padding-left] duration-[240ms] [transition-timing-function:cubic-bezier(.32,.72,0,1)] ${leading?.inset ? 'pl-[49px]' : 'pl-3'}`}>
+        <div data-pane-title-row style={headerColorStyle} className={`@container/panehead group/header relative z-50 flex items-center gap-2 pr-3 py-2 border-b border-border bg-card shrink-0 ${headerColor ? 'chat-header-colored' : ''} transition-[padding-left] duration-[240ms] [transition-timing-function:cubic-bezier(.32,.72,0,1)] ${leading?.inset ? 'pl-[49px]' : 'pl-3'}`}>
           {/* Leading edge (#10585): in split view this pane may stand in for
               the single-chat title row at the surface's top-left. `inset`
               clears the shell's stationary sidebar toggle: the pane starts at
@@ -713,7 +723,11 @@ export default function ChatPane({
           {/* Danger while a stop is under way, so the dot agrees with the
               footer's "Stopping…" caption and the composer instead of staying
               green as if the turn were working normally (#20397). */}
-          <span data-testid="chat-pane-status-dot" className={`w-2 h-2 rounded-full shrink-0 ${headerStopUnderWay ? 'bg-danger animate-pulse' : running ? 'bg-ok animate-pulse' : 'bg-accent'}`} />
+          {/* One dot carries both status and session colour: with a colour it shows
+              the session hue, pulsing while running; a stop under way stays red. */}
+          <span data-testid="chat-pane-status-dot" className={headerColor && !headerStopUnderWay
+            ? `chat-header-dot ${running ? 'animate-pulse' : ''}`
+            : `w-2 h-2 rounded-full shrink-0 ${headerStopUnderWay ? 'bg-danger animate-pulse' : running ? 'bg-ok animate-pulse' : 'bg-accent'}`} />
           {/* Same rename / regenerate control as the single-session header
               (#9727): the title row is the `group/header` hover target that
               reveals the Pen and the Sparkles button. */}

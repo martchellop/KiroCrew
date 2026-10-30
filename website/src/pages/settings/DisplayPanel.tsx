@@ -1049,7 +1049,7 @@ export function DisplayPanel({ basePath }: { basePath?: string } = {}) {
             label={i18nT('pages.settings.displayPanel.palette')}
             hint={i18nT('pages.settings.displayPanel.choose_a_color_palette_for_your_sidebar_sessions')}
             value={paletteName}
-            options={PALETTE_NAMES.map(p => ({ value: p, label: p.charAt(0).toUpperCase() + p.slice(1) }))}
+            options={PALETTE_NAMES.map(p => ({ value: p, label: p === 'categorical' ? i18nT('pages.settings.displayPanel.palette_categorical') : p.charAt(0).toUpperCase() + p.slice(1) }))}
             onChange={v => dispatch(setSessionColorsPalette(v as PaletteName))}
           />
           <SettingsButtonGroup
