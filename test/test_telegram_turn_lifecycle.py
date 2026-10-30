@@ -11,7 +11,6 @@ import asyncio
 import threading
 from types import SimpleNamespace
 from typing import Any
-from unittest.mock import patch
 
 import pytest
 from telegram_helpers import _drop_live_config_snapshot  # noqa: F401
@@ -35,23 +34,26 @@ class TestTelegramSessionPidPublish:
     executor offload) are covered in test_messaging_identity.py.
     """
 
-    def test_telegram_turn_delegates_identity_publish(self) -> None:
+    def test_telegram_turn_delegates_identity_publish(self, tmp_path: Any, monkeypatch) -> None:
+        from kiro_crew.session_pid_sig import read_session_pid_mapping
+
+        monkeypatch.setattr("kiro_crew.session_pid_sig.config_dir", lambda: tmp_path)
         d, _cli, sess = _dispatcher({7})
         sess._pid = 4242  # SessionManager.get_pid -> kiro-cli host PID
 
-        async def _go() -> None:
-            with patch("kiro_crew.telegram.transport_dispatch.publish_turn_identity") as pub:
-                await d.handle_message(
-                    InboundMessage(
-                        channel_type="telegram",
-                        user_id="7",
-                        conversation_id="7",
-                        text="hi",
-                    )
+        asyncio.run(
+            d.handle_message(
+                InboundMessage(
+                    channel_type="telegram",
+                    user_id="7",
+                    conversation_id="7",
+                    text="hi",
                 )
-                pub.assert_awaited_once_with(sess, "telegram:kirocrew:direct:7")
+            )
+        )
 
-        asyncio.run(_go())
+        mapping = read_session_pid_mapping(4242, cfg=tmp_path)
+        assert mapping.session_key == "telegram:kirocrew:direct:7"
 
 
 class TestUserSafeFailureReason:
