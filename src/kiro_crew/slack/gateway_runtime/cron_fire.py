@@ -155,7 +155,14 @@ async def _init_cron(self: GatewayOrchestrator, *, arm: bool = True) -> None:
 
         # ── Code-based script execution (deterministic, no LLM) ──
         if job.script:
-            return await self._cron_run_script(job)
+            result = await self._cron_run_script(job)
+            if job.last_status == "error" and not getattr(job, "run_never_started", False):
+                # A failed run writes no record, so the crewmate's page would keep the
+                # last good one as current: the gateway records the failure there. A
+                # run that never started (overlap guard, admission closed, pool
+                # starved) is not a failure of the job, as the scheduler counts it.
+                await self._record_bound_script_failure(job)
+            return result
 
         # ── Fire-time governance gate: message (LLM) jobs ──
         # Command and script jobs are gated inside their blocks above; a job
@@ -262,6 +269,29 @@ async def _init_cron(self: GatewayOrchestrator, *, arm: bool = True) -> None:
         self._cron_reconciled = True
         if arm:
             await self._start_cron_after_memory_ready()
+
+
+async def _record_bound_script_failure(self: GatewayOrchestrator, job: CronJob) -> None:
+    """Record *job*'s failed run in the crew log of the crewmate it is bound to.
+
+    Only for a job bound to a crewmate (``member_id``). The identity is the
+    scheduler's own record of the job, never anything the script said. BEST-EFFORT and
+    off the loop: the recorder never raises, and a failure that cannot be recorded
+    (no crew log yet, the crew panel off) changes nothing about the run.
+    """
+    import asyncio as _asyncio
+
+    from kiro_crew.dashboard.handlers.agent_panel_record import record_cron_failure
+
+    member_id = str(getattr(job, "member_id", "") or "")
+    if not member_id:
+        return
+    try:
+        await _asyncio.to_thread(
+            record_cron_failure, str(job.id), member_id, str(job.last_error or "")
+        )
+    except Exception:
+        logger.debug("Cron '%s': failure record skipped", job.name, exc_info=True)
 
 
 async def _cron_capture(self: GatewayOrchestrator, job: CronJob) -> _CronCapture:

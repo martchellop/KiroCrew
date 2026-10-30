@@ -239,12 +239,17 @@ if TYPE_CHECKING:  # names it serves from outside the family, from their homes
     from kiro_crew.crew_log import projection  # noqa: F401
     from kiro_crew.crew_log.entry_types import (  # noqa: F401
         CUSTOM_ENTRY_TYPE,
+        CUSTOM_ERROR_LIMIT,
+        CUSTOM_FAILED_ENTRY_TYPE,
+        CUSTOM_MAX_AGE_MAX_S,
+        CUSTOM_MAX_AGE_MIN_S,
         CUSTOM_RECORD_BYTES,
         CUSTOM_RECORD_DEPTH,
         CUSTOM_TYPE_NAME_LIMIT,
         PANEL_FOLD_NAME,
     )
     from kiro_crew.crew_log.projection_dashboard import (  # noqa: F401
+        custom_max_age_ok,
         custom_record_depth,
         custom_record_fits,
         custom_type_name_ok,
