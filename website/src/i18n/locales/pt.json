@@ -16954,7 +16954,10 @@
         "backfill_failed_all_many": "Não foi possível mover {{count}} sessões. Clique novamente para tentar de novo.",
         "backfill_failed_all_other": "Não foi possível mover {{count}} sessões. Clique novamente para tentar de novo.",
         "backfill_folder_gone": "A pasta {{folder}} foi removida enquanto isto era executado. Estas sessões já tinham sido arquivadas nela. Agora estão de volta na barra lateral, fora de qualquer pasta, e têm de ser movidas à mão.",
-        "backfill_folder_gone_nothing_filed": "A pasta {{folder}} foi removida enquanto isto era executado, por isso nada foi arquivado. Primeiro salve estas configurações para criá-la novamente."
+        "backfill_folder_gone_nothing_filed": "A pasta {{folder}} foi removida enquanto isto era executado, por isso nada foi arquivado. Primeiro salve estas configurações para criá-la novamente.",
+        "status_connected": "Conectado",
+        "status_not_connected": "Não conectado",
+        "status_needs_setup": "Precisa de configuração"
       },
       "browserPanel": {
         "use_builtin_label": "Usar o navegador integrado",
@@ -17724,7 +17727,8 @@
         "default_destination_hint": "\"Enviar uma cópia para\" mostra primeiro esta crew, marcada como padrão. Uma pasta pode escolher a sua.",
         "default_destination_none": "Sem padrão",
         "default_destination_not_registered": "{{id}} (não registrada)",
-        "default_destination_save_failed": "Não foi possível salvar a crew de destino padrão."
+        "default_destination_save_failed": "Não foi possível salvar a crew de destino padrão.",
+        "not_active_until_restart": "— inativa até reiniciar"
       },
       "notificationsPanel": {
         "desktop_alerts": "Alertas da área de trabalho",
@@ -17846,7 +17850,10 @@
         "custom_sound_preview": "Reproduzir",
         "custom_sound_choose_where": "Escolha onde ele toca em Sons por categoria",
         "custom_sound_kind_file": "Arquivo",
-        "custom_sound_kind_tones": "Tons"
+        "custom_sound_kind_tones": "Tons",
+        "priority_critical": "Crítica",
+        "priority_default": "Padrão",
+        "priority_passive": "Passiva"
       },
       "privacyPanel": {
         "recordMetricsLabel": "Registrar métricas",

@@ -9431,7 +9431,10 @@
         "backfill_failed_all_one": "Could not move {{count}} session. Click again to retry.",
         "backfill_failed_all_other": "Could not move {{count}} sessions. Click again to retry.",
         "backfill_folder_gone": "The {{folder}} folder was removed while this ran. These sessions had already been filed into it. They are back in the sidebar, outside any folder, and must be moved by hand.",
-        "backfill_folder_gone_nothing_filed": "The {{folder}} folder was removed while this ran, so nothing was filed. Save these settings to create it again first."
+        "backfill_folder_gone_nothing_filed": "The {{folder}} folder was removed while this ran, so nothing was filed. Save these settings to create it again first.",
+        "status_connected": "Connected",
+        "status_not_connected": "Not connected",
+        "status_needs_setup": "Needs setup"
       },
       "browserPanel": {
         "browsing": "Browsing",
@@ -9775,7 +9778,8 @@
         "tunnels_via_aws_ssm_start_session_no_inbound_ssh": "Tunnels via aws ssm start-session — no inbound SSH port or key needed. Requires the AWS CLI, the session-manager-plugin, and ssm:StartSession permission.",
         "up_to": "Up to",
         "use_an_absolute_path_no": ").\n            Use an absolute path (no",
-        "enable_via_setting": "Alternatively, set <settingRef/>, then run <restartCmd/>."
+        "enable_via_setting": "Alternatively, set <settingRef/>, then run <restartCmd/>.",
+        "not_active_until_restart": "— not active until restart"
       },
       "notificationsPanel": {
         "app": "app",
@@ -9801,7 +9805,10 @@
         "push_unsupported": "This browser can't send notifications while {{productName}} is closed.",
         "push_error_permission": "Notifications weren't allowed. Allow them when your browser asks, then try again.",
         "push_error_subscribe": "Couldn't turn on notifications for this device. Try again, or reload the page.",
-        "push_error_unsubscribe": "Couldn't turn off notifications for this device. Try again, or reload the page."
+        "push_error_unsubscribe": "Couldn't turn off notifications for this device. Try again, or reload the page.",
+        "priority_critical": "Critical",
+        "priority_default": "Default",
+        "priority_passive": "Passive"
       },
       "postureDisclosure": {
         "more": "more",

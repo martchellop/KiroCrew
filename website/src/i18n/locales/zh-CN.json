@@ -16372,7 +16372,10 @@
         "verified_and_saved": "已通过 {{channel}} 验证并保存。",
         "backfill_failed_all_other": "有 {{count}} 个会话无法移动。请再次点击重试。",
         "backfill_folder_gone": "{{folder}} 文件夹在运行期间被删除。这些会话此前已被放入其中。它们现在回到了侧边栏，不在任何文件夹中，需要手动移动。",
-        "backfill_folder_gone_nothing_filed": "{{folder}} 文件夹在运行期间被删除，因此没有放入任何内容。请先保存此设置以重新创建。"
+        "backfill_folder_gone_nothing_filed": "{{folder}} 文件夹在运行期间被删除，因此没有放入任何内容。请先保存此设置以重新创建。",
+        "status_connected": "已连接",
+        "status_not_connected": "未连接",
+        "status_needs_setup": "需要设置"
       },
       "browserPanel": {
         "use_builtin_label": "使用内置浏览器",
@@ -17134,7 +17137,8 @@
         "default_destination_hint": "“发送副本到”会优先列出此 crew，并标记为默认。文件夹可以选择自己的 crew。",
         "default_destination_none": "无默认值",
         "default_destination_not_registered": "{{id}}（未注册）",
-        "default_destination_save_failed": "无法保存默认目标 crew。"
+        "default_destination_save_failed": "无法保存默认目标 crew。",
+        "not_active_until_restart": "— 重启后才会生效"
       },
       "notificationsPanel": {
         "desktop_alerts": "桌面通知",
@@ -17256,7 +17260,10 @@
         "custom_sound_preview": "播放",
         "custom_sound_choose_where": "前往“分类提示音”选择在哪里播放",
         "custom_sound_kind_file": "文件",
-        "custom_sound_kind_tones": "音符"
+        "custom_sound_kind_tones": "音符",
+        "priority_critical": "紧急",
+        "priority_default": "默认",
+        "priority_passive": "静默"
       },
       "privacyPanel": {
         "recordMetricsLabel": "记录指标",

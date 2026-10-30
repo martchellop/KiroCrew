@@ -16663,7 +16663,10 @@
         "backfill_failed_all_one": "{{count}}টি সেশন সরানো যায়নি। আবার চেষ্টা করতে ক্লিক করো।",
         "backfill_failed_all_other": "{{count}}টি সেশন সরানো যায়নি। আবার চেষ্টা করতে ক্লিক করো।",
         "backfill_folder_gone": "{{folder}} ফোল্ডারটি চলার সময় সরিয়ে ফেলা হয়েছে। এই সেশনগুলো আগেই সেখানে রাখা হয়েছিল। এগুলো এখন আবার সাইডবারে, কোনো ফোল্ডারের বাইরে আছে, আর হাতে সরাতে হবে।",
-        "backfill_folder_gone_nothing_filed": "{{folder}} ফোল্ডারটি চলার সময় সরিয়ে ফেলা হয়েছে, তাই কিছুই রাখা হয়নি। প্রথমে এটি আবার তৈরি করতে এই সেটিং সংরক্ষণ করো।"
+        "backfill_folder_gone_nothing_filed": "{{folder}} ফোল্ডারটি চলার সময় সরিয়ে ফেলা হয়েছে, তাই কিছুই রাখা হয়নি। প্রথমে এটি আবার তৈরি করতে এই সেটিং সংরক্ষণ করো।",
+        "status_connected": "সংযুক্ত",
+        "status_not_connected": "সংযুক্ত নয়",
+        "status_needs_setup": "সেটআপ দরকার"
       },
       "browserPanel": {
         "use_builtin_label": "বিল্ট-ইন ব্রাউজার ব্যবহার করুন",
@@ -17429,7 +17432,8 @@
         "default_destination_hint": "\"কপি পাঠান\"-এ এই crew ডিফল্ট হিসেবে প্রথমে দেখায়। কোনো ফোল্ডার নিজের crew বেছে নিতে পারে।",
         "default_destination_none": "কোনো ডিফল্ট নেই",
         "default_destination_not_registered": "{{id}} (নিবন্ধিত নয়)",
-        "default_destination_save_failed": "ডিফল্ট গন্তব্য crew সংরক্ষণ করা যায়নি।"
+        "default_destination_save_failed": "ডিফল্ট গন্তব্য crew সংরক্ষণ করা যায়নি।",
+        "not_active_until_restart": "— রিস্টার্ট না হওয়া পর্যন্ত সক্রিয় নয়"
       },
       "notificationsPanel": {
         "desktop_alerts": "ডেস্কটপ বিজ্ঞপ্তি",
@@ -17551,7 +17555,10 @@
         "custom_sound_preview": "চালাও",
         "custom_sound_choose_where": "বিভাগভিত্তিক শব্দ-এ বেছে নাও এটি কোথায় বাজবে",
         "custom_sound_kind_file": "ফাইল",
-        "custom_sound_kind_tones": "টোন"
+        "custom_sound_kind_tones": "টোন",
+        "priority_critical": "জরুরি",
+        "priority_default": "ডিফল্ট",
+        "priority_passive": "নীরব"
       },
       "privacyPanel": {
         "recordMetricsLabel": "মেট্রিক রেকর্ড করো",

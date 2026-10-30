@@ -16954,7 +16954,10 @@
         "backfill_failed_all_many": "Non è stato possibile spostare {{count}} sessioni. Fai clic di nuovo per riprovare.",
         "backfill_failed_all_other": "Non è stato possibile spostare {{count}} sessioni. Fai clic di nuovo per riprovare.",
         "backfill_folder_gone": "La cartella {{folder}} è stata rimossa durante l'esecuzione. Queste sessioni erano già state archiviate al suo interno. Ora sono di nuovo nella barra laterale, fuori da ogni cartella, e devono essere spostate a mano.",
-        "backfill_folder_gone_nothing_filed": "La cartella {{folder}} è stata rimossa durante l'esecuzione, quindi non è stato archiviato nulla. Salva prima queste impostazioni per ricrearla."
+        "backfill_folder_gone_nothing_filed": "La cartella {{folder}} è stata rimossa durante l'esecuzione, quindi non è stato archiviato nulla. Salva prima queste impostazioni per ricrearla.",
+        "status_connected": "Connesso",
+        "status_not_connected": "Non connesso",
+        "status_needs_setup": "Configurazione necessaria"
       },
       "browserPanel": {
         "use_builtin_label": "Usa il browser integrato",
@@ -17724,7 +17727,8 @@
         "default_destination_hint": "«Invia una copia a» mostra per prima questa crew, contrassegnata come predefinita. Una cartella può sceglierne una propria.",
         "default_destination_none": "Nessun valore predefinito",
         "default_destination_not_registered": "{{id}} (non registrata)",
-        "default_destination_save_failed": "Impossibile salvare la crew di destinazione predefinita."
+        "default_destination_save_failed": "Impossibile salvare la crew di destinazione predefinita.",
+        "not_active_until_restart": "— non attiva fino al riavvio"
       },
       "notificationsPanel": {
         "desktop_alerts": "Avvisi desktop",
@@ -17846,7 +17850,10 @@
         "custom_sound_preview": "Riproduci",
         "custom_sound_choose_where": "Scegli dove suona in Suoni per categoria",
         "custom_sound_kind_file": "File",
-        "custom_sound_kind_tones": "Toni"
+        "custom_sound_kind_tones": "Toni",
+        "priority_critical": "Critica",
+        "priority_default": "Predefinita",
+        "priority_passive": "Passiva"
       },
       "privacyPanel": {
         "recordMetricsLabel": "Registra le metriche",

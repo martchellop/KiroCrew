@@ -17245,7 +17245,10 @@
         "backfill_failed_all_many": "Не удалось переместить {{count}} сессий. Нажмите снова, чтобы повторить.",
         "backfill_failed_all_other": "Не удалось переместить {{count}} сессии. Нажмите снова, чтобы повторить.",
         "backfill_folder_gone": "Папка {{folder}} была удалена во время выполнения. Эти сессии уже были размещены в ней. Теперь они снова на боковой панели, вне любой папки, и их нужно переместить вручную.",
-        "backfill_folder_gone_nothing_filed": "Папка {{folder}} была удалена во время выполнения, поэтому ничего не размещено. Сначала сохраните эти настройки, чтобы создать её заново."
+        "backfill_folder_gone_nothing_filed": "Папка {{folder}} была удалена во время выполнения, поэтому ничего не размещено. Сначала сохраните эти настройки, чтобы создать её заново.",
+        "status_connected": "Подключено",
+        "status_not_connected": "Не подключено",
+        "status_needs_setup": "Требуется настройка"
       },
       "browserPanel": {
         "use_builtin_label": "Использовать встроенный браузер",
@@ -18019,7 +18022,8 @@
         "default_destination_hint": "«Отправить копию» показывает эту crew первой с пометкой «по умолчанию». Папка может выбрать свою.",
         "default_destination_none": "Без значения по умолчанию",
         "default_destination_not_registered": "{{id}} (не зарегистрирована)",
-        "default_destination_save_failed": "Не удалось сохранить crew назначения по умолчанию."
+        "default_destination_save_failed": "Не удалось сохранить crew назначения по умолчанию.",
+        "not_active_until_restart": "— не активно до перезапуска"
       },
       "notificationsPanel": {
         "desktop_alerts": "Уведомления на рабочем столе",
@@ -18141,7 +18145,10 @@
         "custom_sound_preview": "Воспроизвести",
         "custom_sound_choose_where": "Выбери, где он звучит, в разделе «Звуки по категориям»",
         "custom_sound_kind_file": "Файл",
-        "custom_sound_kind_tones": "Тоны"
+        "custom_sound_kind_tones": "Тоны",
+        "priority_critical": "Критический",
+        "priority_default": "По умолчанию",
+        "priority_passive": "Тихий"
       },
       "privacyPanel": {
         "recordMetricsLabel": "Записывать метрики",

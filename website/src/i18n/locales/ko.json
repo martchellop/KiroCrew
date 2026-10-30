@@ -16372,7 +16372,10 @@
         "verified_and_saved": "{{channel}}에서 확인되어 저장되었습니다.",
         "backfill_failed_all_other": "세션 {{count}}개를 옮기지 못했습니다. 다시 시도하려면 클릭하세요.",
         "backfill_folder_gone": "{{folder}} 폴더가 실행 중에 삭제되었습니다. 이 세션들은 이미 그 안에 정리되어 있었습니다. 지금은 사이드바에서 어느 폴더에도 속하지 않은 상태로 돌아갔으며 직접 옮겨야 합니다.",
-        "backfill_folder_gone_nothing_filed": "{{folder}} 폴더가 실행 중에 삭제되어 아무것도 정리되지 않았습니다. 먼저 이 설정을 저장해 다시 만드세요."
+        "backfill_folder_gone_nothing_filed": "{{folder}} 폴더가 실행 중에 삭제되어 아무것도 정리되지 않았습니다. 먼저 이 설정을 저장해 다시 만드세요.",
+        "status_connected": "연결됨",
+        "status_not_connected": "연결 안 됨",
+        "status_needs_setup": "설정 필요"
       },
       "browserPanel": {
         "use_builtin_label": "내장 브라우저 사용",
@@ -17134,7 +17137,8 @@
         "default_destination_hint": "\"사본 보내기\"에 이 crew가 기본으로 표시되어 먼저 나옵니다. 폴더마다 다른 crew를 고를 수 있습니다.",
         "default_destination_none": "기본값 없음",
         "default_destination_not_registered": "{{id}} (등록되지 않음)",
-        "default_destination_save_failed": "기본 대상 crew를 저장하지 못했습니다."
+        "default_destination_save_failed": "기본 대상 crew를 저장하지 못했습니다.",
+        "not_active_until_restart": "— 다시 시작할 때까지 활성화되지 않음"
       },
       "privacyPanel": {
         "recordMetricsLabel": "메트릭 기록",
@@ -17268,7 +17272,10 @@
         "custom_sound_preview": "재생",
         "custom_sound_choose_where": "카테고리별 소리에서 재생할 곳 선택",
         "custom_sound_kind_file": "파일",
-        "custom_sound_kind_tones": "톤"
+        "custom_sound_kind_tones": "톤",
+        "priority_critical": "긴급",
+        "priority_default": "기본",
+        "priority_passive": "조용함"
       },
       "postureDisclosure": {
         "filter": "{{label}} 필터",
