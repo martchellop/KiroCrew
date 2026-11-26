@@ -2,9 +2,9 @@
   "config": {
     "embedder": "qwen3-embedding:0.6b@1024",
     "environment": {
-      "numpy": "2.5.4",
+      "numpy": "2.5.5",
       "platform": "linux-x86_64",
-      "python": "3.12.15",
+      "python": "3.12.16",
       "sqlite": "3.45.1"
     },
     "ingest": {
@@ -39,7 +39,7 @@
     "turns": 2760,
     "variant": "locomo10[5i/allq]"
   },
-  "elapsed_s": 1774.66,
+  "elapsed_s": 1532.55,
   "ingest_totals": {
     "attempted": 2760,
     "dropped_fragments": 3,
@@ -227,7 +227,7 @@
     "unattributed_hits": 77
   },
   "warnings": [
-    "996/996 scorable queries face a haystack with distractor sessions",
+    "759/759 scorable queries face a haystack with distractor sessions",
     "ranking backend is 'sqlite_cosine', not FAISS \u2014 faiss is not importable here. Results remain internally consistent, but a comparison is only valid against another run reporting the same backend."
   ]
 }
